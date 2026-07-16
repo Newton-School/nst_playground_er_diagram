@@ -18,8 +18,8 @@ def init_db():
             'CREATE TABLE IF NOT EXISTS questions ('
             ' id INTEGER PRIMARY KEY AUTOINCREMENT,'
             ' title TEXT NOT NULL,'
-            ' prompt TEXT NOT NULL,'
-            ' reference TEXT NOT NULL,'
+            ' question TEXT NOT NULL,'
+            ' solution TEXT NOT NULL,'
             ' created_at REAL NOT NULL)'
         )
 
@@ -42,7 +42,7 @@ def get_question(question_id):
 def create_question(title, question, solution):
     with _conn() as c:
         cur = c.execute(
-            'INSERT INTO questions (title, prompt, solution, created_at) VALUES (?,?,?,?)',
+            'INSERT INTO questions (title, question, solution, created_at) VALUES (?,?,?,?)',
             (title, question, json.dumps(solution), time.time()))
         return cur.lastrowid
 
