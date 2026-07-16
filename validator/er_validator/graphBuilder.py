@@ -25,15 +25,15 @@ class ColorTable:
     @staticmethod
     def describe(key):
         """Human-readable form of a color key for mismatch messages."""
-        kind = key[0]
-        if kind == 'FIELD':
+        attribute_kind = key[0]
+        if attribute_kind == 'FIELD':
             _, datatype, primary_key, not_null, unique, auto_increment = key
             traits = [t for t, on in (
                 ('PRIMARY KEY', primary_key), ('NOT NULL', not_null), ('UNIQUE', unique), ('AUTO_INCREMENT', auto_increment),
             ) if on]
             return datatype + (f' [{", ".join(traits)}]' if traits else '')
-        if kind in ('FK_SOURCE', 'FK_DESTINATION'):
-            return f'{kind} ({key[1]})'
+        if attribute_kind in ('FK_SOURCE', 'FK_DESTINATION'):
+            return f'{attribute_kind} ({key[1]})'
         return str(key)
 
 def field_color_key(field):
@@ -43,7 +43,7 @@ def field_color_key(field):
 
 def build_graph(diagram, color_table):
     graph = ColoredGraph()
-    vertex_id_map = {} 
+    vertex_ids = {} 
 
     def add_vertex(color_key, label):
         vertex_id = graph.length
@@ -54,9 +54,9 @@ def build_graph(diagram, color_table):
 
     for table in diagram.tables:
         for field in table.fields:
-            vertex_id_map[field.id] = add_vertex(field_color_key(field), f'{table.name}.{field.name}')
+            vertex_ids[field.id] = add_vertex(field_color_key(field), f'{table.name}.{field.name}')
         for first, second in combinations(table.fields, 2):
-            graph.edges.append((vertex_id_map[first.id], vertex_id_map[second.id]))
+            graph.edges.append((vertex_ids[first.id], vertex_ids[second.id]))
 
     for relationship in diagram.relationships:
         # one_to_one has no direction ('1' on both ends) — give both markers the
@@ -68,11 +68,11 @@ def build_graph(diagram, color_table):
             source_color, distination_color = ('FK_SOURCE', relationship.cardinality), ('FK_DESTINATION', relationship.cardinality)
         
         source_marker = add_vertex(source_color, f'fk{relationship.id}:source')
-        distination_marker = add_vertex(distination_color, f'fk{relationship.id}:destination')
+        destination_marker = add_vertex(destination_color, f'fk{relationship.id}:destination')
         
         graph.edges.append((vertex_id_map[relationship.start_field], source_marker))
-        graph.edges.append((source_marker, distination_marker))
-        graph.edges.append((distination_marker, vertex_id_map[relationship.end_field]))
+        graph.edges.append((source_marker, destination_marker))
+        graph.edges.append((destination_marker, vertex_id_map[relationship.end_field]))
 
     return graph
             
