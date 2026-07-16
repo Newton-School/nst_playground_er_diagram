@@ -55,24 +55,24 @@ def build_graph(diagram, color_table):
     for table in diagram.tables:
         for field in table.fields:
             vertex_id_map[field.id] = add_vertex(field_color_key(field), f'{table.name}.{field.name}')
-        for a, b in combinations(table.fields, 2):
-            graph.edges.append((vertex_id_map[a.id], vertex_id_map[b.id]))
+        for first, second in combinations(table.fields, 2):
+            graph.edges.append((vertex_id_map[first.id], vertex_id_map[second.id]))
 
     for relationship in diagram.relationships:
         # one_to_one has no direction ('1' on both ends) — give both markers the
         # same color so A->B and B->A produce isomorphic encodings. one_to_many
         # was already normalized into many_to_one by the parser.
         if relationship.cardinality == 'one_to_one':
-            color_1 = color_2 = ('FK', 'one_to_one')
+            source_color = distination_color = ('FK', 'one_to_one')
         else:
-            color_1, color_2 = ('FK_SOURCE', relationship.cardinality), ('FK_DESTINATION', relationship.cardinality)
+            source_color, distination_color = ('FK_SOURCE', relationship.cardinality), ('FK_DESTINATION', relationship.cardinality)
         
-        marker_1 = add_vertex(color_1, f'fk{relationship.id}:source')
-        marker_2 = add_vertex(color_2, f'fk{relationship.id}:destination')
+        source_marker = add_vertex(source_color, f'fk{relationship.id}:source')
+        distination_marker = add_vertex(distination_color, f'fk{relationship.id}:destination')
         
-        graph.edges.append((vid[relationship.start_field], marker_1))
-        graph.edges.append((marker_1, marker_2))
-        graph.edges.append((marker_2, vid[relationship.end_field]))
+        graph.edges.append((vertex_id_map[relationship.start_field], source_marker))
+        graph.edges.append((source_marker, distination_marker))
+        graph.edges.append((distination_marker, vertex_id_map[relationship.end_field]))
 
     return graph
             
