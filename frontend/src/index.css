@@ -218,8 +218,9 @@ html, body, #root {
 }
 
 .canvas-container {
-  width: 100%;
+  flex-grow: 1;
   height: 100%;
+  position: relative;
 }
 
 /* App Container Layout */
@@ -405,6 +406,8 @@ html, body, #root {
 }
 
 .main-workspace {
+  display: flex;
+  flex-direction: row;
   flex-grow: 1;
   width: 100%;
   height: calc(100vh - 56px);

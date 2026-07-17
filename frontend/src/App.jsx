@@ -10,6 +10,7 @@ import {
 } from '@xyflow/react';
 
 import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import '@xyflow/react/dist/style.css';
 
 const initialNodes = [];
@@ -30,6 +31,7 @@ export default function App() {
       <Navbar />
 
       <main className="main-workspace">
+        <Sidebar />
         <div className="canvas-container">
           <ReactFlow
             nodes={nodes}
