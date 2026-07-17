@@ -72,9 +72,9 @@ export default function RightSidebar() {
           Relations
         </button>
       </div>
-
       {/* Action Bar */}
       <div className="flex gap-3 p-4 items-center">
+      <div className="flex gap-3 p-4 box-border items-center">
         {activeTab === 'tables' && (
           <button className="h-9 flex items-center gap-1.5 px-3 bg-neutral-100 border border-neutral-300 rounded-lg text-neutral-900 font-sans text-[13px] font-bold cursor-pointer transition-all duration-200 hover:bg-neutral-200 hover:border-neutral-400 focus-visible:outline-none focus-visible:border-brand-500 focus-visible:ring-2 focus-visible:ring-brand-100 whitespace-nowrap">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
