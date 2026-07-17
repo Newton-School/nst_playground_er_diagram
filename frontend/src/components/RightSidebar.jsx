@@ -4,6 +4,8 @@ import TableListItem from './TableListItem';
 import RelationListItem from './RelationListItem';
 
 export default function RightSidebar({ tables = [], edges = [], setEdges, onAddTable, onUpdateTable, onDeleteTable }) {
+
+export default function RightSidebar({ tables = [], onAddTable, onUpdateTable, onDeleteTable }) {
   const [activeTab, setActiveTab] = useState('tables');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
