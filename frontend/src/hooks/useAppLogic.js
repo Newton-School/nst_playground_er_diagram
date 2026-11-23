@@ -33,6 +33,7 @@ export default function useAppLogic() {
   });
   const [authError, setAuthError] = useState(null);
 
+  const [questionId, setQuestionId] = useState(null);
   const [questionId, setQuestionId] = useState(() => {
     return getQuestionIdFromUrl();
   });
@@ -90,6 +91,14 @@ export default function useAppLogic() {
       }, eds));
     },
     [setEdges, tables],
+  );
+
+  const onNodesDelete = useCallback(
+    (deleted) => {
+      const deletedIds = new Set(deleted.map((n) => n.id));
+      setTables((prev) => prev.filter((t) => !deletedIds.has(t.id)));
+    },
+    [setTables]
   );
 
   const handleAddTable = (tableName) => {
@@ -358,7 +367,6 @@ export default function useAppLogic() {
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
-    localStorage.removeItem('active_question_id');
     setToken(null);
     setUser(null);
     setQuestionId(null);
@@ -380,7 +388,7 @@ export default function useAppLogic() {
     submitting, saving, saveSuccess, isPublishing, loadingWorkspace, loadingSolution, submitError, validationResult,
     token, user, authError, questionId, question,
     solutionModalOpen, setSolutionModalOpen, solutionDiagram,
-    onNodesChange, onEdgesChange, onConnect,
+    onNodesChange, onEdgesChange, onConnect, onNodesDelete,
     setEdges, setValidationResult,
     handleAddTable, handleUpdateTable, handleDeleteTable,
     handleQuestionLoaded, handleSave, handlePublishToggle, handleDeleteQuestion, handleRevealSolution, handleSubmit, handleReset,

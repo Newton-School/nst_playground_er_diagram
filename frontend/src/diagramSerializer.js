@@ -40,6 +40,15 @@ export function serializeDiagram(tables, edges) {
 
   for (const edge of edges) {
     const data = edge.data || {};
+    let compositeKeys = data.compositeKeys || [];
+    
+    // Fallback to handles if user just drew the line and didn't manually configure composite keys
+    if (compositeKeys.length === 0 && edge.sourceHandle && edge.targetHandle) {
+      const sCol = edge.sourceHandle.replace('source-', '').replace('target-', '');
+      const tCol = edge.targetHandle.replace('target-', '').replace('source-', '');
+      compositeKeys = [{ foreign: sCol, primary: tCol }];
+    }
+    
     const cardinality = CARDINALITY_MAP[data.cardinality] || 'many_to_one';
     const sourceTableId = tableIdMap[edge.source];
     const targetTableId = tableIdMap[edge.target];

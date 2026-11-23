@@ -1,7 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { fetchQuestion } from '../api';
 
+export default function Sidebar({ user, question }) {
+  const [width, setWidth] = useState(420);
+  const isResizing = useRef(false);
+
+  const questionData = question;
+  const loading = !questionData;
+
+  const [isResizingActive, setIsResizingActive] = useState(false);
 export default function Sidebar({ user, selectedQuestionId, question = null }) {
   const [width, setWidth] = useState(420);
   const isResizing = useRef(false);
@@ -36,29 +43,43 @@ export default function Sidebar({ user, selectedQuestionId, question = null }) {
     loadDetail();
   }, [selectedQuestionId, question]);
 
-  const startResizing = (e) => {
+  const startResizing = () => {
     isResizing.current = true;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', stopResizing);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
+    setIsResizingActive(true);
   };
 
-  const handleMouseMove = (e) => {
+  const stopResizing = useCallback(() => {
+    isResizing.current = false;
+    setIsResizingActive(false);
+  }, []);
+
+  const handleMouseMove = useCallback((e) => {
     if (!isResizing.current) return;
     const newWidth = e.clientX;
     if (newWidth >= 320 && newWidth <= 600) {
       setWidth(newWidth);
     }
-  };
+  }, []);
 
-  const stopResizing = () => {
-    isResizing.current = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', stopResizing);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  };
+  useEffect(() => {
+    if (isResizingActive) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', stopResizing);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResizing);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResizing);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizingActive, handleMouseMove, stopResizing]);
 
   return (
     <aside 
@@ -105,7 +126,7 @@ export default function Sidebar({ user, selectedQuestionId, question = null }) {
                   h4: ({ children }) => <h4 className="text-[13px] font-bold text-neutral-900 mt-4 mb-2 font-sans uppercase tracking-wider">{children}</h4>,
                   ul: ({ children }) => <ul className="pl-0 my-2 list-none">{children}</ul>,
                   ol: ({ children }) => <ol className="pl-5 my-3">{children}</ol>,
-                  li: ({ children, ...props }) => (
+                  li: ({ children }) => (
                     <li className="list-disc text-[14px] leading-relaxed text-neutral-700 font-medium ml-4 mb-1.5">
                       {children}
                     </li>

@@ -15,6 +15,8 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
   const [ownerEmail, setOwnerEmail] = useState('');
   const [error, setError] = useState('');
 
+  // Modal state for Delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   // Delete Confirmation Modal state
   const [questionToDelete, setQuestionToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,6 +70,22 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
     }
   };
 
+  const promptDelete = (id, e) => {
+    e.stopPropagation();
+    setDeleteConfirmId(id);
+  };
+
+  const executeDelete = async (id) => {
+    setDeleteConfirmId(null);
+    // Optimistic UI update
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+
+    try {
+      await deleteQuestion(id);
+      setTimeout(() => loadQuestions(), 500);
+    } catch (err) {
+      alert(err.message);
+      loadQuestions();
   const requestDelete = (question, e) => {
     e.stopPropagation(); // Prevent card selection click
     if (isDeleting) return; // Do not switch while a delete operation is in progress
@@ -98,6 +116,12 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
 
   const handleTogglePublish = async (id, currentStatus, e) => {
     e.stopPropagation(); // Prevent card selection click
+    
+    // Optimistically update the UI to prevent jarring flicker
+    setQuestions((prev) => 
+      prev.map((q) => q.id === id ? { ...q, is_published: !currentStatus } : q)
+    );
+    
     const nextStatus = !currentStatus;
     // Optimistically update badge and button immediately
     setQuestions((prev) =>
@@ -107,6 +131,16 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
       await updateQuestion(id, {
         is_published: nextStatus
       });
+      // Silently fetch and sync the latest data in the background
+      fetchQuestions().then(data => {
+        if (data) setQuestions(data);
+      }).catch(console.error);
+    } catch (err) {
+      alert(err.message);
+      // Revert optimistic update on failure
+      setQuestions((prev) => 
+        prev.map((q) => q.id === id ? { ...q, is_published: currentStatus } : q)
+      );
       loadQuestions(false);
     } catch (err) {
       console.error('Failed to toggle publish status:', err);
@@ -235,6 +269,7 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
             {filteredQuestions.map((q) => {
               const canManage = isTeacher;
               const userIdStr = String(user?.id || '').toLowerCase();
+              const canManage = user?.role === 'TEACHER' || user?.role === 'ADMIN';
               const isReviewer = userIdStr === String(q.reviewer_id || '').toLowerCase();
 
               // Difficulty Badge Styles
@@ -298,6 +333,9 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
                           {q.is_published ? 'Unpublish' : 'Publish'}
                         </button>
                         <button
+                          onClick={(e) => promptDelete(q.id, e)}
+                          className="p-2 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-600 transition-colors border-none bg-transparent cursor-pointer"
+                          title="Delete assignment"
                           onClick={(e) => requestDelete(q, e)}
                           className="px-2.5 py-1.5 rounded-lg hover:bg-red-50 text-neutral-500 hover:text-red-600 border border-transparent hover:border-red-200 transition-colors bg-transparent cursor-pointer flex items-center gap-1.5 text-[11px] font-bold"
                           title="Delete question permanently"
@@ -417,6 +455,18 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
           </div>
         </div>
       )}
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4" onClick={() => setDeleteConfirmId(null)}>
+          <div className="bg-white rounded-lg shadow-lg p-5 w-80 max-w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-[16px] font-bold text-neutral-900 m-0 mb-2">Confirm Deletion</h3>
+            <p className="text-[13px] text-neutral-600 m-0 mb-5">
+              Are you sure you want to delete this question?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-4 py-2 rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium text-[13px] cursor-pointer border-none"
 
       {/* DELETE CONFIRMATION MODAL (NO BROWSER POPUP) */}
       {questionToDelete && (
@@ -462,6 +512,10 @@ export default function Dashboard({ user, onSelectQuestion, onLogout }) {
                 Cancel
               </button>
               <button
+                onClick={() => executeDelete(deleteConfirmId)}
+                className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium text-[13px] cursor-pointer border-none"
+              >
+                Delete
                 type="button"
                 disabled={isDeleting}
                 onClick={confirmDelete}

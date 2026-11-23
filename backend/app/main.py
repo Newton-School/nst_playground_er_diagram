@@ -111,6 +111,8 @@ def questions_get(question_id: str, include_solution: bool = False, current_user
     return question
 
 def check_question_permission(question: dict, user: User, action: str = "edit"):
+    if user.role not in (UserRole.TEACHER, UserRole.ADMIN):
+        raise HTTPException(403, f'Only Teachers or Admins can {action} questions.')
     is_teacher = user.role in (UserRole.TEACHER, UserRole.ADMIN)
     is_creator = str(user.id) == str(question.get('created_by'))
     is_owner = str(user.id) == str(question.get('owner_id'))
